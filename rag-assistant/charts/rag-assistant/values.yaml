@@ -1,0 +1,149 @@
+# Default values for rag-assistant
+
+# 后端服务配置
+backend:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: kubesphere/rag-backend
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  # 环境变量
+  env:
+    milvusHost: "milvus"
+    milvusPort: "19530"
+  
+  # API 密钥配置（通过 Secret）
+  secrets:
+    llmApiKey: ""  # 留空，通过 --set 或独立的 secret 配置
+    llmApiUrl: ""
+  
+  # 持久化存储
+  persistence:
+    data:
+      enabled: true
+      storageClass: "standard"
+      size: 5Gi
+    logs:
+      enabled: true
+      storageClass: "standard"
+      size: 2Gi
+
+# Milvus 向量数据库配置
+milvus:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: milvusdb/milvus
+    tag: "v2.2.11"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 19530
+  
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  
+  persistence:
+    enabled: true
+    storageClass: "standard"
+    dataSize: 10Gi
+    rdbSize: 5Gi
+    metaSize: 2Gi
+
+# etcd 配置
+etcd:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: quay.io/coreos/etcd
+    tag: "v3.5.5"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 2379
+  
+  persistence:
+    enabled: true
+    storageClass: "standard"
+    size: 5Gi
+
+# MinIO 配置
+minio:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: minio/minio
+    tag: "RELEASE.2023-03-20T20-16-18Z"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 9000
+  
+  credentials:
+    accessKey: "minioadmin"
+    secretKey: "minioadmin"
+  
+  persistence:
+    enabled: true
+    storageClass: "standard"
+    size: 10Gi
+
+# Ingress 配置
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+  path: /api/rag-assistant(/|$)(.*)
+  pathType: Prefix
+
+# 全局配置
+global:
+  namespace: kubesphere-system
+  
+# ServiceAccount 配置
+serviceAccount:
+  create: true
+  name: "rag-assistant"
+
+# RBAC 配置
+rbac:
+  create: true
+
+# 节点选择器
+nodeSelector: {}
+
+# 容忍度配置
+tolerations: []
+
+# 亲和性配置
+affinity: {}

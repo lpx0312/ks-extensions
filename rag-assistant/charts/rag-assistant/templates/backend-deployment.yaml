@@ -1,0 +1,92 @@
+{{- if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+    component: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "rag-assistant.selectorLabels" . | nindent 6 }}
+      component: backend
+  template:
+    metadata:
+      labels:
+        {{- include "rag-assistant.selectorLabels" . | nindent 8 }}
+        component: backend
+    spec:
+      serviceAccountName: {{ include "rag-assistant.serviceAccountName" . }}
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        env:
+        - name: MILVUS_HOST
+          value: {{ .Values.backend.env.milvusHost | quote }}
+        - name: MILVUS_PORT
+          value: {{ .Values.backend.env.milvusPort | quote }}
+        - name: LLM_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "rag-assistant.fullname" . }}-secrets
+              key: llm-api-key
+        - name: LLM_API_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "rag-assistant.fullname" . }}-secrets
+              key: llm-api-url
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 12 }}
+        volumeMounts:
+        {{- if .Values.backend.persistence.data.enabled }}
+        - name: data
+          mountPath: /app/data
+        {{- end }}
+        {{- if .Values.backend.persistence.logs.enabled }}
+        - name: logs
+          mountPath: /app/logs
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      {{- if .Values.backend.persistence.data.enabled }}
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ include "rag-assistant.fullname" . }}-data
+      {{- end }}
+      {{- if .Values.backend.persistence.logs.enabled }}
+      - name: logs
+        persistentVolumeClaim:
+          claimName: {{ include "rag-assistant.fullname" . }}-logs
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

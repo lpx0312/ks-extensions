@@ -1,0 +1,95 @@
+{{- if .Values.minio.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-minio
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+    component: minio
+spec:
+  replicas: {{ .Values.minio.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "rag-assistant.selectorLabels" . | nindent 6 }}
+      component: minio
+  template:
+    metadata:
+      labels:
+        {{- include "rag-assistant.selectorLabels" . | nindent 8 }}
+        component: minio
+    spec:
+      containers:
+      - name: minio
+        image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
+        imagePullPolicy: {{ .Values.minio.image.pullPolicy }}
+        ports:
+        - name: api
+          containerPort: 9000
+          protocol: TCP
+        - name: console
+          containerPort: 9001
+          protocol: TCP
+        env:
+        - name: MINIO_ACCESS_KEY
+          value: {{ .Values.minio.credentials.accessKey | quote }}
+        - name: MINIO_SECRET_KEY
+          value: {{ .Values.minio.credentials.secretKey | quote }}
+        command:
+          - minio
+          - server
+          - /data
+          - --console-address
+          - ":9001"
+        volumeMounts:
+        {{- if .Values.minio.persistence.enabled }}
+        - name: minio-data
+          mountPath: /data
+        {{- end }}
+      volumes:
+      {{- if .Values.minio.persistence.enabled }}
+      - name: minio-data
+        persistentVolumeClaim:
+          claimName: {{ include "rag-assistant.fullname" . }}-minio
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-minio
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+    component: minio
+spec:
+  type: {{ .Values.minio.service.type }}
+  ports:
+    - name: api
+      port: {{ .Values.minio.service.port }}
+      targetPort: api
+      protocol: TCP
+    - name: console
+      port: 9001
+      targetPort: console
+      protocol: TCP
+  selector:
+    {{- include "rag-assistant.selectorLabels" . | nindent 4 }}
+    component: minio
+{{- if .Values.minio.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-minio
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.minio.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.minio.persistence.size }}
+{{- end }}
+{{- end }}

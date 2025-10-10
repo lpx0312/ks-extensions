@@ -1,0 +1,33 @@
+{{- if .Values.backend.persistence.data.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-data
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.backend.persistence.data.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.backend.persistence.data.size }}
+{{- end }}
+---
+{{- if .Values.backend.persistence.logs.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-logs
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.backend.persistence.logs.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.backend.persistence.logs.size }}
+{{- end }}

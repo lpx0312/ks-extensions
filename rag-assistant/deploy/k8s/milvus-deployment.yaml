@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: milvus
+  namespace: kubesphere-system
+  labels:
+    app: milvus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: milvus
+  template:
+    metadata:
+      labels:
+        app: milvus
+    spec:
+      containers:
+      - name: milvus
+        image: milvusdb/milvus:v2.2.11
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 19530
+          name: milvus
+        - containerPort: 9091
+          name: metrics
+        env:
+        - name: ETCD_ENDPOINTS
+          value: "etcd:2379"
+        - name: MINIO_ADDRESS
+          value: "minio:9000"
+        resources:
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+        volumeMounts:
+        - name: milvus-data
+          mountPath: /var/lib/milvus/data
+        - name: milvus-rdb-data
+          mountPath: /var/lib/milvus/rdb_data
+        - name: milvus-rdb-meta
+          mountPath: /var/lib/milvus/rdb_data_meta_kv
+      volumes:
+      - name: milvus-data
+        persistentVolumeClaim:
+          claimName: milvus-data-pvc
+      - name: milvus-rdb-data
+        persistentVolumeClaim:
+          claimName: milvus-rdb-data-pvc
+      - name: milvus-rdb-meta
+        persistentVolumeClaim:
+          claimName: milvus-rdb-meta-pvc

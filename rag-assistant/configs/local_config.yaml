@@ -1,0 +1,21 @@
+extensions:
+  - name: rag-assistant
+    description: KubeSphere RAG智能助手扩展
+    displayName:
+      zh: RAG 智能助手
+      en: RAG Assistant
+    category: ai
+    version: 1.0.0
+    provider:
+      name:
+        zh: KubeSphere
+        en: KubeSphere
+      email: kubesphere@gmail.com
+      url: https://kubesphere.io
+    sources:
+      - https://github.com/kubesphere/rag-extension
+    icon: ./frontend/src/assets/logo.svg
+    entries:
+      - name: global
+        parent: null
+        path: /rag-assistant

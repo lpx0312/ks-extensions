@@ -1,0 +1,372 @@
+/* KubeSphere RAG 助手扩展样式 */
+
+/* 容器样式 */
+.rag-assistant-container {
+  position: relative;
+  z-index: 1000;
+}
+
+/* 悬浮按钮 */
+.rag-assistant-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1001;
+  transition: all 0.3s ease;
+}
+
+.rag-assistant-fab:hover {
+  transform: scale(1.05);
+}
+
+/* 聊天面板 */
+.rag-assistant-panel {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 400px;
+  height: 600px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background-color: var(--panel-background);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1002;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 面板头部 */
+.rag-assistant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--header-background);
+}
+
+.rag-assistant-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--title-color);
+}
+
+.rag-assistant-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 面板内容 */
+.rag-assistant-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* 会话侧边栏 */
+.rag-assistant-sidebar {
+  width: 240px;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--sidebar-background);
+}
+
+.rag-assistant-sidebar-header {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rag-assistant-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.rag-assistant-new-session {
+  margin-bottom: 12px;
+}
+
+.rag-assistant-sessions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rag-assistant-session-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 4px;
+}
+
+.rag-assistant-session-item:hover {
+  background-color: var(--item-hover-background);
+}
+
+.rag-assistant-session-item.active {
+  background-color: var(--item-active-background);
+}
+
+.rag-assistant-session-icon {
+  margin-right: 8px;
+  color: var(--icon-color);
+}
+
+.rag-assistant-session-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.rag-assistant-session-title {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rag-assistant-session-time {
+  font-size: 12px;
+  color: var(--secondary-text-color);
+}
+
+/* 聊天区域 */
+.rag-assistant-chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 16px;
+  background-color: var(--chat-background);
+}
+
+/* 空状态 */
+.rag-assistant-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--secondary-text-color);
+  text-align: center;
+  padding: 0 32px;
+}
+
+/* 消息样式 */
+.rag-assistant-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rag-assistant-message {
+  display: flex;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.rag-assistant-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--avatar-background);
+  color: var(--avatar-color);
+  flex-shrink: 0;
+}
+
+.rag-assistant-message-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rag-assistant-message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.rag-assistant-message-sender {
+  font-weight: 500;
+  color: var(--sender-color);
+}
+
+.rag-assistant-message-time {
+  color: var(--time-color);
+}
+
+.rag-assistant-message-text {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: var(--message-background);
+  color: var(--message-text-color);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.user-message .rag-assistant-message-text {
+  background-color: var(--user-message-background);
+  color: var(--user-message-text-color);
+}
+
+.assistant-message .rag-assistant-message-text {
+  background-color: var(--assistant-message-background);
+  color: var(--assistant-message-text-color);
+}
+
+/* 引用来源 */
+.rag-assistant-message-sources {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.rag-assistant-sources-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--secondary-text-color);
+  margin-bottom: 4px;
+}
+
+.rag-assistant-sources-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rag-assistant-source-item {
+  padding: 4px 8px;
+  background-color: var(--source-background);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.rag-assistant-source-item:hover {
+  background-color: var(--source-hover-background);
+}
+
+.rag-assistant-source-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* 加载状态 */
+.rag-assistant-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--secondary-text-color);
+}
+
+.rag-assistant-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  color: var(--secondary-text-color);
+}
+
+/* 错误状态 */
+.rag-assistant-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  color: var(--error-color);
+  text-align: center;
+  padding: 0 16px;
+}
+
+/* 输入区域 */
+.rag-assistant-input-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--input-background);
+}
+
+.rag-assistant-input-area input {
+  flex: 1;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .rag-assistant-panel {
+    width: calc(100% - 48px);
+    height: 80vh;
+    bottom: 80px;
+  }
+}
+
+/* 主题变量 - 会被KubeSphere主题覆盖 */
+:root {
+  --panel-background: #ffffff;
+  --header-background: #f5f7f9;
+  --chat-background: #ffffff;
+  --sidebar-background: #f5f7f9;
+  --input-background: #ffffff;
+  --border-color: #e6e8eb;
+  --title-color: #242e42;
+  --icon-color: #79879c;
+  --secondary-text-color: #79879c;
+  --message-background: #f5f7f9;
+  --message-text-color: #242e42;
+  --user-message-background: #55bc8a;
+  --user-message-text-color: #ffffff;
+  --assistant-message-background: #f5f7f9;
+  --assistant-message-text-color: #242e42;
+  --avatar-background: #55bc8a;
+  --avatar-color: #ffffff;
+  --sender-color: #242e42;
+  --time-color: #79879c;
+  --source-background: #eef4f9;
+  --source-hover-background: #e3edf7;
+  --item-hover-background: #eef4f9;
+  --item-active-background: #e3edf7;
+  --error-color: #ca2621;
+}

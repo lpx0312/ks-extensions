@@ -1,0 +1,135 @@
+{{- if .Values.milvus.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-milvus
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+    component: milvus
+spec:
+  replicas: {{ .Values.milvus.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "rag-assistant.selectorLabels" . | nindent 6 }}
+      component: milvus
+  template:
+    metadata:
+      labels:
+        {{- include "rag-assistant.selectorLabels" . | nindent 8 }}
+        component: milvus
+    spec:
+      containers:
+      - name: milvus
+        image: "{{ .Values.milvus.image.repository }}:{{ .Values.milvus.image.tag }}"
+        imagePullPolicy: {{ .Values.milvus.image.pullPolicy }}
+        ports:
+        - name: grpc
+          containerPort: 19530
+          protocol: TCP
+        - name: http
+          containerPort: 9091
+          protocol: TCP
+        env:
+        - name: ETCD_ENDPOINTS
+          value: "{{ include "rag-assistant.fullname" . }}-etcd:2379"
+        - name: MINIO_ADDRESS
+          value: "{{ include "rag-assistant.fullname" . }}-minio:9000"
+        - name: MINIO_ACCESS_KEY
+          value: {{ .Values.minio.credentials.accessKey | quote }}
+        - name: MINIO_SECRET_KEY
+          value: {{ .Values.minio.credentials.secretKey | quote }}
+        resources:
+          {{- toYaml .Values.milvus.resources | nindent 12 }}
+        volumeMounts:
+        {{- if .Values.milvus.persistence.enabled }}
+        - name: milvus-data
+          mountPath: /var/lib/milvus/data
+        - name: milvus-rdb
+          mountPath: /var/lib/milvus/rdb_data
+        - name: milvus-meta
+          mountPath: /var/lib/milvus/rdb_data_meta_kv
+        {{- end }}
+      volumes:
+      {{- if .Values.milvus.persistence.enabled }}
+      - name: milvus-data
+        persistentVolumeClaim:
+          claimName: {{ include "rag-assistant.fullname" . }}-milvus-data
+      - name: milvus-rdb
+        persistentVolumeClaim:
+          claimName: {{ include "rag-assistant.fullname" . }}-milvus-rdb
+      - name: milvus-meta
+        persistentVolumeClaim:
+          claimName: {{ include "rag-assistant.fullname" . }}-milvus-meta
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-milvus
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+    component: milvus
+spec:
+  type: {{ .Values.milvus.service.type }}
+  ports:
+    - name: grpc
+      port: {{ .Values.milvus.service.port }}
+      targetPort: grpc
+      protocol: TCP
+    - name: http
+      port: 9091
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "rag-assistant.selectorLabels" . | nindent 4 }}
+    component: milvus
+{{- if .Values.milvus.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-milvus-data
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.milvus.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.milvus.persistence.dataSize }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-milvus-rdb
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.milvus.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.milvus.persistence.rdbSize }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "rag-assistant.fullname" . }}-milvus-meta
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "rag-assistant.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.milvus.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.milvus.persistence.metaSize }}
+{{- end }}
+{{- end }}

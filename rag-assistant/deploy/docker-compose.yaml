@@ -1,0 +1,104 @@
+version: '3'
+
+services:
+  # RAG API服务
+  rag-api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: rag-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_API_URL=${LLM_API_URL}
+    volumes:
+      - ../backend/data:/app/data
+      - ../backend/logs:/app/logs
+    networks:
+      - rag-network
+    depends_on:
+      - milvus
+      - etcd
+      - minio
+
+  # Milvus向量数据库
+  milvus:
+    image: milvusdb/milvus:v2.2.11
+    container_name: milvus
+    restart: unless-stopped
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+      - MINIO_ADDRESS=minio:9000
+    volumes:
+      - milvus-data:/var/lib/milvus/data
+      - milvus-rdb:/var/lib/milvus/rdb_data
+      - milvus-meta:/var/lib/milvus/rdb_data_meta_kv
+    networks:
+      - rag-network
+    depends_on:
+      - etcd
+      - minio
+
+  # etcd服务
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    container_name: etcd
+    restart: unless-stopped
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - etcd-data:/etcd
+    command:
+      - etcd
+      - --advertise-client-urls=http://127.0.0.1:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --data-dir=/etcd
+    networks:
+      - rag-network
+
+  # MinIO对象存储
+  minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    container_name: minio
+    restart: unless-stopped
+    environment:
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    volumes:
+      - minio-data:/data
+    command: minio server /data
+    networks:
+      - rag-network
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:1.21
+    container_name: rag-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ../frontend/dist:/usr/share/nginx/html
+    networks:
+      - rag-network
+    depends_on:
+      - rag-api
+
+networks:
+  rag-network:
+    driver: bridge
+
+volumes:
+  milvus-data:
+  milvus-rdb:
+  milvus-meta:
+  etcd-data:
+  minio-data:
