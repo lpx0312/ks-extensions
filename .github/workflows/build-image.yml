@@ -1,0 +1,48 @@
+name: Build and Push Image
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - v1.1.7
+      - v1.1.8
+      - all
+    paths:
+      - 'Dockerfile'
+      - '.extensions-museum/**'
+      - '.github/workflows/build-image.yml'
+      - '.github/actions/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Build Environment
+        uses: ./.github/actions/setup
+
+      - name: Build and push multi-arch image
+        timeout-minutes: 60
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          IMAGE="${ALIYUN_REGISTRY}/${ALIYUN_NAME_SPACE}/ks-extensions-museum:${BRANCH}"
+          echo "=== Target image: ${IMAGE} ==="
+          echo "=== Platforms: linux/arm64, linux/amd64 ==="
+          docker login -u "${ALIYUN_REGISTRY_USER}" -p "${ALIYUN_REGISTRY_PASSWORD}" "${ALIYUN_REGISTRY}"
+          docker buildx build \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg branch="${BRANCH}" \
+            -t "${IMAGE}" \
+            --push \
+            .
+          echo "=== Build and push completed ==="
+        env:
+          ALIYUN_REGISTRY: ${{ vars.ALIYUN_REGISTRY }}
+          ALIYUN_NAME_SPACE: ${{ vars.ALIYUN_NAME_SPACE }}
+          ALIYUN_REGISTRY_USER: ${{ vars.ALIYUN_REGISTRY_USER }}
+          ALIYUN_REGISTRY_PASSWORD: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
